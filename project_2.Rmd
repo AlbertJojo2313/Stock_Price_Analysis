@@ -15,7 +15,7 @@ editor_options:
         wrap: 100
 ---
 # 1. Abstract
-The study explores the relationship between stock price movements and the trading volume for four major companies: Tesla (TSLA), Google(GOOGL), Netflix(NFLX), and Apple(AAPL), using data from 2020-2024. The goal of this project is to develop regression models that predict the daily sales volume based on stock data.
+The study explores the relationship between stock price movements and the trading volume for four major companies: Tesla (TSLA), Google(GOOGL), Netflix(NFLX), and Apple(AAPL), using data from 2020-2024. The goal of this project is to develop regression models that predict the daily close price based on historic stock data.
 
 # 2. Objectives
 

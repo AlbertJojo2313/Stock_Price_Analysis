@@ -12,3 +12,6 @@
 ---- (10/31/25)
 1. Implemented functions for time_series and boxplots.
 2. Split the plotting functions in separate folder for easier access and debugging.
+
+---- (11/1/25)
+1. Decided to predict the close returns
