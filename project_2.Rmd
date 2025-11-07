@@ -15,7 +15,7 @@ editor_options:
         wrap: 100
 ---
 # 1. Abstract
-The study explores the relationship between stock price movements and the closing price for Netflix, using data from 2010-2024. The goal of this project is to develop a regression model that predicts the daily close price based on historic stock data.
+The study explores the relationship between stock price movements and the closing price for Netflix, using data from 2010-2024. The goal of this project is to develop a regression model that predicts the daily close price based on historical stock data.
 
 # 2. Objectives
 

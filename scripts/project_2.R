@@ -1,41 +1,70 @@
 library(dplyr)
-# --- Data Loading ---
-# tesla_stock <- read.csv("data/TSLA.csv")
-# google_stock <- read.csv("data/GoogleStockPrices.csv")
-netflix_stock <- read.csv("data/Netflix_Data.csv")
-# apple_stock <- read.csv("data/apple_5yr_one.csv")
+library(recipes)
+library(caret)
 
-# --- Data Structure ---
-stocks <- list(
-    # TSLA = tesla_stock,
-    # GOOGL = google_stock,
-    NFLX = netflix_stock
-    # AAPL = apple_stock
-)
-# --- Processing Function ---
-process_dfs <- function(stocks) {
-    drop_cols <- c("X", "Adj.Close", "Adj Close", "Adj_Close")
-    for (name in names(stocks)) {
-        df <- stocks[[name]]
-        df <- df %>% select(-any_of(drop_cols))
-        df[["Date"]] <- as.Date(df[["Date"]])
 
-        stocks[[name]] <- df
-    }
-    return(stocks)
+# =======
+# DATA LOADING & PROCESSING
+# =======
+
+load_data <- function(filepath = "data/insurance.csv") {
+    df <- read.csv(filepath)
+    return(df)
+}
+
+process_data <- function(df) {
+    # Create recipe for dummy encoding
+    rec <- recipe(~., data = df) %>%
+        step_dummy(all_nominal(), one_hot = FALSE)
+
+    # Prepare and apply the recipe
+    prep_rec <- prep(rec, training = df)
+    df_encoded <- bake(prep_rec, new_data = df)
+
+    # Clean column names
+    colnames(df_encoded) <- gsub("region_", "R_", colnames(df_encoded))
+    colnames(df_encoded) <- gsub("smoker_", "S_", colnames(df_encoded))
+    colnames(df_encoded) <- gsub("sex_", "G_", colnames(df_encoded))
+
+    return(as.data.frame(df_encoded))
 }
 
 
-# --- Run ---
+# Source files
 source("scripts/plotting.R")
-source("scripts/statistical_eval.R")
+source("scripts/models.R")
 
+# Load and process data
+df <- load_data("data/insurance.csv")
+df_encoded <- process_data(df)
 
-stocks <- process_dfs(stocks)
-plot_histograms(stocks, display = TRUE, save_path = "plots/histograms")
-plot_box_plts(stocks, display = TRUE, save_path = "plots/boxplots")
-plot_time_series(stocks, display = TRUE, save_path = "plots/time_series")
-plot_spread(stocks, target_col = "Close", display = TRUE, save_path = "plots/spread")
-plot_corr_matrix(stocks, save_path = "plots/correlation_matrix")
+# Train and evaluate
+split <- train_test_split(df_encoded)
+# =====
+# FULL Model (with CV = 5)
+# =====
+cat("\nBEST FULL MODEL SUMMARY(CV = 5)\n")
+best_base_model <- cross_validate(split$train, charges ~ .)
+cat("\nEVALUATION RESULTS:\n")
+evaluate_model(best_base_model, split$test)
+cat("\nVIF CHECK")
+print(check_vif(best_base_model))
 
-summary_stats <- summary_stats(stocks)
+# =====
+# REDUCED MODEL
+# =====
+cat("\nBEST REDUCED MODEL SUMMARY(CV=5)\n")
+best_reduced_model <- cross_validate(split$train, charges ~ age + bmi + children + S_yes)
+cat("\nEVALUATION RESULTS:\n")
+evaluate_model(best_reduced_model, split$test)
+cat("\nVIF CHECK\n")
+print(check_vif(best_reduced_model))
+
+# =====
+# MODEL(WITHOUT CHILDREN)
+# =====
+cat("\nFINAL MODEL WITHOUT(CHILDREN) SUMMARY(CV=5)\n")
+best_final_model <- cross_validate(split$train, charges ~ age + bmi + S_yes)
+evaluate_model(best_final_model, split$test)
+cat("\nVIF CHECK\n")
+print(check_vif(best_final_model))
